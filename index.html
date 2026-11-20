@@ -3,52 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PiQuiz Benin</title>
+<title>Quiz Pi - Test Ensemble</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>Pi.init({version:"2.0", sandbox:true});</script>
 <style>
-body{font-family:Arial;text-align:center;background:#6a1b9a;color:white;padding:15px}
-.card{background:white;color:#333;border-radius:15px;padding:20px;max-width:400px;margin:15px auto}
-button{background:#f9a825;border:none;padding:12px;border-radius:10px;font-weight:bold;width:100%;margin:5px 0}
-.top{background:#ffca28;color:#333;padding:10px;border-radius:10px;font-weight:bold}
+body{font-family:Arial;text-align:center;background:#f5f0ff;padding:20px}
+.card{background:white;padding:20px;border-radius:15px;max-width:500px;margin:auto;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+button{background:#7b2ff7;color:white;border:none;padding:15px 25px;border-radius:10px;font-size:16px;margin:10px;cursor:pointer;width:90%}
+.opt{background:#eee;color:#333}
+.correct{background:green !important;color:white}
 </style>
 </head>
 <body>
-<h1>🇧🇯 PiQuiz Benin</h1>
-<div class="top">⭐ Score: <span id="score">0</span> | 🪙 Pi: <span id="pi">0</span> | Question <span id="num">1</span>/5</div>
 <div class="card">
-<h2 id="q"></h2>
-<div id="btns"></div>
-<p id="r"></p>
-<button onclick="next()">Question Suivante ➡️</button>
+<h1>🎯 Quiz Pi - TEST</h1>
+<p><b>1 seul bouton pour tout faire</b></p>
+<p>Tu te connectes avec <b>Pi Browser</b>, tu paies <b>0.1 Test-Pi</b>, et le quiz s'ouvre tout seul.</p>
+
+<button id="startBtn" onclick="startAll()">🚀 CONNECTER + PAYER + JOUER</button>
+<p id="status">En attente...</p>
+
+<div id="quiz" style="display:none">
+<h2 id="question"></h2>
+<div id="options"></div>
+<p id="score">Score : 0</p>
+<button onclick="withdraw()">💰 Demander Retrait</button>
+<p id="withdrawMsg"></p>
 </div>
-<button onclick="alert('Connexion Pi bientot !')">Se connecter avec Pi</button>
+
+<p style="font-size:12px;color:grey">Quiz de connaissances, pas de hasard. Paiement via Pi SDK officiel. Test avec Test-Pi.</p>
+</div>
+
 <script>
-let questions=[
-{q:"Quelle est la capitale du Bénin ?",a:["Porto-Novo","Cotonou","Parakou"],b:0},
-{q:"Quelle est la ville économique du Bénin ?",a:["Abomey","Cotonou","Natitingou"],b:1},
-{q:"Quel roi est célèbre à Abomey ?",a:["Béhanzin","Sundiata","Chaka"],b:0},
-{q:"Quelle langue parle-t-on au Bénin ?",a:["Anglais","Français","Espagnol"],b:1},
-{q:"Quel plat est célèbre au Bénin ?",a:["Amiwo","Pizza","Sushi"],b:0}
+let current=0, score=0;
+const questions=[
+{ q:"Capitale du Bénin ?", opts:["Cotonou","Porto-Novo","Parakou"], ans:1 },
+{ q:"5 x 5 = ?", opts:["20","25","30"], ans:1 },
+{ q:"Crypto du Pi Browser ?", opts:["Bitcoin","Pi","Doge"], ans:1 },
+{ q:"Couleur du ciel ?", opts:["Vert","Bleu","Rouge"], ans:1 },
+{ q:"Jours dans une semaine ?", opts:["5","7","6"], ans:1 }
 ];
-let i=0,score=0,pi=0;
-function show(){
-document.getElementById('q').innerText=questions[i].q;
-document.getElementById('num').innerText=i+1;
-document.getElementById('r').innerText='';
-let h='';
-questions[i].a.forEach((x,idx)=>{h+=`<button onclick="check(${idx})">${x}</button>`});
-document.getElementById('btns').innerHTML=h;
+
+async function startAll(){
+  document.getElementById('status').innerText = "Connexion en cours... Ouvre dans Pi Browser";
+  try{
+    const auth = await Pi.authenticate(['username','payments'], onIncomplete);
+    document.getElementById('status').innerText = "Connecté @" + auth.user.username + " - Paiement en cours...";
+    
+    await Pi.createPayment({ amount: 0.1, memo: "Quiz Pi Test", metadata:{type:"quiz"} }, {
+      onReadyForServerApproval:(id)=>{},
+      onReadyForServerCompletion:(id,txid)=>{},
+      onCancel:()=>{ alert("Paiement annulé"); },
+      onError:()=>{ alert("Erreur paiement"); }
+    });
+
+    document.getElementById('status').innerText = "✅ Payé ! Bonne chance @" + auth.user.username;
+    document.getElementById('quiz').style.display="block";
+    document.getElementById('startBtn').style.display="none";
+    showQuestion();
+  }catch(e){ alert("Ouvre ce lien DANS Pi Browser pour que ça marche"); }
 }
-function check(idx){
-if(idx===questions[i].b){score+=10;pi+=1;document.getElementById('r').innerText='✅ Bravo ! +10 points, +1 Pi';}
-else{document.getElementById('r').innerText='❌ Oups, essaie encore !';}
-document.getElementById('score').innerText=score;
-document.getElementById('pi').innerText=pi;
+function onIncomplete(p){ console.log(p); }
+function showQuestion(){
+  if(current>=questions.length){
+    document.getElementById('question').innerText="Fini ! Score : "+score+"/"+questions.length;
+    document.getElementById('options').innerHTML=""; return;
+  }
+  let q=questions[current];
+  document.getElementById('question').innerText=q.q;
+  let h="";
+  q.opts.forEach((o,i)=>{ h+=`<button class="opt" onclick="answer(${i},this)">${o}</button><br>`; });
+  document.getElementById('options').innerHTML=h;
 }
-function next(){
-if(i<4){i++;show();}
-else{alert('Fini ! Ton score: '+score+' | Tes Pi: '+pi+' 🎉');}
+function answer(i,btn){
+  if(i===questions[current].ans){score++; btn.classList.add('correct');}
+  else{btn.style.background="red"; btn.style.color="white";}
+  document.getElementById('score').innerText="Score : "+score;
+  setTimeout(()=>{current++; showQuestion();},800);
 }
-show();
+function withdraw(){
+  document.getElementById('withdrawMsg').innerText="✅ Retrait demandé pour score "+score+". En TEST c'est simulé, en vrai ça va dans ton wallet Pi.";
+}
 </script>
 </body>
-  </html>
+                                                      </html>
