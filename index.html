@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PiQuiz Benin</title>
+<style>
+body{font-family:Arial;text-align:center;background:#6a1b9a;color:white;padding:15px}
+.card{background:white;color:#333;border-radius:15px;padding:20px;max-width:400px;margin:15px auto}
+button{background:#f9a825;border:none;padding:12px;border-radius:10px;font-weight:bold;width:100%;margin:5px 0}
+.top{background:#ffca28;color:#333;padding:10px;border-radius:10px;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>🇧🇯 PiQuiz Benin</h1>
+<div class="top">⭐ Score: <span id="score">0</span> | 🪙 Pi: <span id="pi">0</span> | Question <span id="num">1</span>/5</div>
+<div class="card">
+<h2 id="q"></h2>
+<div id="btns"></div>
+<p id="r"></p>
+<button onclick="next()">Question Suivante ➡️</button>
+</div>
+<button onclick="alert('Connexion Pi bientot !')">Se connecter avec Pi</button>
+<script>
+let questions=[
+{q:"Quelle est la capitale du Bénin ?",a:["Porto-Novo","Cotonou","Parakou"],b:0},
+{q:"Quelle est la ville économique du Bénin ?",a:["Abomey","Cotonou","Natitingou"],b:1},
+{q:"Quel roi est célèbre à Abomey ?",a:["Béhanzin","Sundiata","Chaka"],b:0},
+{q:"Quelle langue parle-t-on au Bénin ?",a:["Anglais","Français","Espagnol"],b:1},
+{q:"Quel plat est célèbre au Bénin ?",a:["Amiwo","Pizza","Sushi"],b:0}
+];
+let i=0,score=0,pi=0;
+function show(){
+document.getElementById('q').innerText=questions[i].q;
+document.getElementById('num').innerText=i+1;
+document.getElementById('r').innerText='';
+let h='';
+questions[i].a.forEach((x,idx)=>{h+=`<button onclick="check(${idx})">${x}</button>`});
+document.getElementById('btns').innerHTML=h;
+}
+function check(idx){
+if(idx===questions[i].b){score+=10;pi+=1;document.getElementById('r').innerText='✅ Bravo ! +10 points, +1 Pi';}
+else{document.getElementById('r').innerText='❌ Oups, essaie encore !';}
+document.getElementById('score').innerText=score;
+document.getElementById('pi').innerText=pi;
+}
+function next(){
+if(i<4){i++;show();}
+else{alert('Fini ! Ton score: '+score+' | Tes Pi: '+pi+' 🎉');}
+}
+show();
+</script>
+</body>
+  </html>
